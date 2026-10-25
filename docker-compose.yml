@@ -1,0 +1,12 @@
+services:
+  chat:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - salon_data:/app
+    environment:
+      - DATABASE_URL=sqlite:///./salon.db
+
+volumes:
+  salon_data:
