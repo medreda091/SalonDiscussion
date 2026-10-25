@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>SalonDiscussion</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    #messages { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 1rem; margin-bottom: 1rem; }
+    input { padding: 0.5rem; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>SalonDiscussion</h1>
+  <label>Salon : <input id="room" value="general" /></label>
+  <label>Pseudo : <input id="username" value="reda" /></label>
+  <button onclick="connect()">Rejoindre</button>
+  <div id="messages"></div>
+  <input id="content" placeholder="Votre message..." size="50" />
+  <button onclick="sendMessage()">Envoyer</button>
+  <script>
+    let socket = null;
+    async function connect() {
+      const room = document.getElementById("room").value;
+      const box = document.getElementById("messages");
+      box.innerHTML = "";
+      // Charge l'historique avant d'ouvrir le WebSocket.
+      const history = await fetch(`/rooms/${room}/messages`).then(r => r.json());
+      history.forEach(m => addLine(m.username, m.content));
+      socket = new WebSocket(`ws://${location.host}/ws/${room}`);
+      socket.onmessage = (event) => {
+        const m = JSON.parse(event.data);
+        addLine(m.username, m.content);
+      };
+    }
+    function addLine(user, text) {
+      const box = document.getElementById("messages");
+      const p = document.createElement("p");
+      p.textContent = user + " : " + text;
+      box.appendChild(p);
+    }
+    function sendMessage() {
+      const username = document.getElementById("username").value;
+      const content = document.getElementById("content").value;
+      if (socket && content.trim()) {
+        socket.send(JSON.stringify({ username, content }));
+        document.getElementById("content").value = "";
+      }
+    }
+  </script>
+</body>
+</html>
